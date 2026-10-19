@@ -1,0 +1,49 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-title>Galería (Storage)</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <ion-refresher slot="fixed" (ionRefresh)="refresh($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  @if (loading()) {
+    <div class="estado">
+      <ion-spinner name="crescent" aria-label="Cargando imágenes"></ion-spinner>
+    </div>
+  } @else if (errorMsg()) {
+    <ion-text color="danger" role="alert">
+      <p>Error cargando la galería: {{ errorMsg() }}</p>
+    </ion-text>
+  } @else {
+    <ion-grid>
+      <ion-row>
+        @for (img of images(); track img.name) {
+          <!-- 1 columna en móvil, 2 en tablet, 4 en escritorio -->
+          <ion-col size="12" size-sm="6" size-lg="3">
+            <ion-card>
+              <img [src]="img.url" [alt]="img.name" loading="lazy" />
+              <ion-card-header>
+                <ion-card-title>{{ img.name }}</ion-card-title>
+                @if (img.createdAt) {
+                  <ion-card-subtitle>{{ img.createdAt | date: 'dd/MM/yyyy HH:mm' }}</ion-card-subtitle>
+                }
+              </ion-card-header>
+              @if (img.size) {
+                <ion-card-content>{{ img.size / 1024 | number: '1.0-1' }} KB</ion-card-content>
+              }
+            </ion-card>
+          </ion-col>
+        } @empty {
+          <ion-col size="12">
+            <ion-text color="medium">
+              <p>No hay imágenes en el bucket "galeria".</p>
+            </ion-text>
+          </ion-col>
+        }
+      </ion-row>
+    </ion-grid>
+  }
+</ion-content>

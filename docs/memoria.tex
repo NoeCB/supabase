@@ -1,0 +1,1013 @@
+\documentclass[a4paper, 12pt]{article}
+
+% --- PAQUETES DE IDIOMA Y CODIFICACIÓN ---
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish, es-tabla]{babel}
+
+% --- FORMATO APA (GEOMETRÍA Y FUENTE) ---
+\usepackage[margin=2.54cm]{geometry} % Márgenes APA
+\usepackage{mathptmx}                % Fuente Times New Roman
+\usepackage{setspace}                % Para interlineado
+\usepackage{hanging}                 % Para sangría francesa
+\usepackage{listings}
+
+% --- PAQUETES ADICIONALES ---
+\usepackage{graphicx}
+\usepackage{float}      % Permite usar [H]
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{xurl}       % Corta las URLs correctamente (ya incluye url)
+\usepackage{eso-pic}    % Para imagen de fondo
+\usepackage{fancyhdr}   % Para encabezados personalizados
+\usepackage{hyperref}   % Mejor cargarlo al final
+
+% --- CONFIGURACIÓN DE PIES DE FOTO ---
+\usepackage[
+   labelfont=bf,
+   font=it,
+   labelsep=newline,
+   justification=raggedright,
+   singlelinecheck=false
+]{caption}
+
+% --- CONFIGURACIÓN DE LOS BLOQUES DE CÓDIGO ---
+\lstset{
+  basicstyle=\ttfamily\footnotesize,
+  keywordstyle=\bfseries,
+  frame=single,
+  breaklines=true,        % Corta las líneas largas en vez de salirse del margen
+  numbers=left,
+  numberstyle=\tiny,
+  showstringspaces=false,
+  tabsize=2,
+  captionpos=b,
+  % Sin esto, las tildes y la ñ dentro del código dan error
+  literate={á}{{\'a}}1 {é}{{\'e}}1 {í}{{\'i}}1 {ó}{{\'o}}1 {ú}{{\'u}}1
+           {Á}{{\'A}}1 {É}{{\'E}}1 {Í}{{\'I}}1 {Ó}{{\'O}}1 {Ú}{{\'U}}1
+           {ñ}{{\~n}}1 {Ñ}{{\~N}}1 {¿}{{?`}}1 {¡}{{!`}}1 {·}{{$\cdot$}}1
+}
+\renewcommand{\lstlistingname}{Código}
+
+% TypeScript no viene incluido en listings
+\lstdefinelanguage{TypeScript}{
+  keywords={import, from, export, class, interface, type, const, private, public,
+    readonly, async, await, return, if, else, throw, true, false, null, undefined,
+    constructor, implements, this, string, number, Promise, new},
+  sensitive=true,
+  comment=[l]{//},
+  morecomment=[s]{/*}{*/},
+  morestring=[b]', morestring=[b]"
+}
+
+% --- CONFIGURACIÓN DE PÁRRAFOS ---
+\setlength{\parindent}{0.5cm}
+\setlength{\headheight}{45pt}
+
+% --- CONFIGURACIÓN DE IMÁGENES DE FONDO Y ENCABEZADO ---
+\newcommand\BackgroundPic{
+    \put(0,0){
+        \parbox[b][\paperheight]{\paperwidth}{
+            \vfill
+            \centering
+            \includegraphics[width=0.7\paperwidth,keepaspectratio]{logonebrija.png}
+            \vfill
+        }
+    }
+}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[R]{\thepage}
+\fancyhead[L]{\includegraphics[height=1.1cm]{logoencabezado.png}}
+\renewcommand{\headrulewidth}{0pt}
+
+%---------------------------------------------------------------------------
+\begin{document}
+
+\AddToShipoutPicture*{\BackgroundPic}
+
+% --- PORTADA ---
+\begin{titlepage}
+    \centering
+    \vspace*{2cm}
+
+    {\Huge \textbf{Supabase}}\\[0.5cm]
+    {\Large \textbf{Desarrollo de interfaces}}\\[1.5cm]
+
+    {\large Noelia Cantador Bosqued}\\[0.5cm]
+    {\large Desarrollo de Aplicaciones Multiplataforma}\\
+    {\large Institutos Nebrija}\\[2cm]
+
+    \begin{minipage}{0.85\textwidth}
+        \centering
+        \textit{Gestión completa CRUD con roles (Ionic, Angular Standalone y Supabase)}
+    \end{minipage}
+
+    \vfill
+    {\large \today}
+    \vspace*{2cm}
+\end{titlepage}
+
+% --- ÍNDICE ---
+\newpage
+\tableofcontents
+\newpage
+
+% ===========================================================================
+\section{Introducción}
+% ===========================================================================
+
+En este laboratorio se desarrolla una aplicación de gestión de clientes con
+\textbf{Ionic} y \textbf{Angular Standalone}, conectada a un \textit{backend}
+\textbf{Supabase}. La aplicación permite:
+
+\begin{itemize}
+  \item Consultar el listado de clientes y la galería de imágenes sin iniciar
+        sesión.
+  \item Crear, editar y borrar clientes (\textbf{CRUD}). Al intentarlo, la
+        aplicación pide iniciar sesión y solo lo permite a los administradores.
+  \item Ver como \textit{cards} las imágenes guardadas en un \textit{bucket} de
+        Supabase Storage.
+\end{itemize}
+
+La conexión se realiza con la librería oficial \texttt{@supabase/supabase-js},
+que crea un cliente a partir de la URL del proyecto y la clave pública
+(\textit{publishable key}). Supabase muestra los pasos para Ionic Angular en su
+asistente de conexión (figura \ref{fig:connect}).
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{image.png}
+    \caption{Asistente de conexión de Supabase para Ionic Angular.}
+    \label{fig:connect}
+\end{figure}
+
+El código completo está publicado en GitHub:
+\url{https://github.com/NoeCB/supabase}.
+
+\subsection{Resultados de aprendizaje}
+
+\begin{itemize}
+  \item \textbf{RA 1 -- CE 1.c}: enlace entre el modelo y la vista mediante
+        formularios reactivos y \textit{signals}.
+  \item \textbf{RA 3 -- CE 3.d}: gestión de eventos de autenticación y
+        modificación de la interfaz según el rol del usuario.
+  \item \textbf{RA 4 -- CE 4.a}: diseño responsivo con \texttt{ion-list} e
+        \texttt{ion-grid}.
+\end{itemize}
+
+\subsection{Base teórica}
+
+La aplicación aplica un \textbf{control de acceso basado en roles} (RBAC). En
+una arquitectura \textit{serverless} con Supabase, la seguridad no está en la
+aplicación Angular, sino en las \textbf{políticas de seguridad a nivel de fila}
+(\textit{Row Level Security}, RLS) de PostgreSQL. La interfaz tiene un doble
+papel:
+
+\begin{enumerate}
+  \item \textbf{Formularios reactivos} (\texttt{ReactiveFormsModule}):
+        validan los datos en el cliente antes de enviarlos.
+  \item \textbf{Renderizado condicional} (\texttt{@if}): adapta la interfaz al
+        estado de la sesión, por ejemplo mostrando el botón de iniciar o cerrar
+        sesión y el rol del usuario.
+\end{enumerate}
+
+En la aplicación hay tres niveles de acceso:
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{Usuario} & \textbf{Perfil en \texttt{profiles}} & \textbf{Permisos} \\ \hline
+Visitante (sin sesión) & --             & Ver clientes y galería \\ \hline
+noeliac@gmail.com      & sin perfil     & Ver, pero no modificar clientes \\ \hline
+juan@gmail.com         & \texttt{admin} & Ver, crear, editar y borrar clientes \\ \hline
+\end{tabular}
+\caption{Niveles de acceso de la aplicación.}
+\label{tab:roles}
+\end{table}
+
+% ===========================================================================
+\section{Paso 1: Instalación de la librería}
+% ===========================================================================
+
+El proyecto parte de una aplicación Ionic con Angular Standalone (plantilla de
+pestañas). Desde la terminal integrada, en la raíz del proyecto, se instala el
+SDK oficial de Supabase:
+
+\begin{lstlisting}[language=bash, caption={Instalación del cliente de Supabase}]
+npm install @supabase/supabase-js
+\end{lstlisting}
+
+Esto añade la dependencia al archivo \texttt{package.json} del proyecto.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{image1.png}
+    \caption{Resultado de la instalación de la dependencia.}
+    \label{fig:npm-install}
+\end{figure}
+
+% ===========================================================================
+\section{Paso 2: Configuración de las credenciales (environments)}
+% ===========================================================================
+
+La URL y la clave del proyecto se guardan en los archivos de entorno de
+Angular, separadas de la lógica de la aplicación. Se usa la
+\textbf{publishable key}, que es pública y está pensada para el cliente: lo que
+protege los datos son las políticas RLS. La clave \texttt{service\_role} nunca
+debe aparecer en el código, porque se salta todas las políticas.
+
+\subsection*{src/environments/environment.ts}
+
+\begin{lstlisting}[language=TypeScript, caption={Credenciales en modo desarrollo}]
+export const environment = {
+  production: false,
+  supabaseUrl: 'https://rueljvohvzfdmtfjwazl.supabase.co',
+  supabaseKey: 'sb_publishable_AhKlJL6ZZwxTRmuCQVOMSg_j2oCc86e',
+};
+\end{lstlisting}
+
+\subsection*{src/environments/environment.prod.ts}
+
+\begin{lstlisting}[language=TypeScript, caption={Credenciales en modo producción}]
+export const environment = {
+  production: true,
+  supabaseUrl: 'https://rueljvohvzfdmtfjwazl.supabase.co',
+  supabaseKey: 'sb_publishable_AhKlJL6ZZwxTRmuCQVOMSg_j2oCc86e',
+};
+\end{lstlisting}
+
+La librería añade por su cuenta la ruta de la API REST
+(\texttt{/rest/v1/}), así que en la URL solo se pone el dominio del proyecto.
+
+% ===========================================================================
+\section{Paso 3: Configuración del backend en Supabase (SQL)}
+% ===========================================================================
+
+Todo el SQL se ejecuta en el \textbf{SQL Editor} de Supabase
+(icono \texttt{>\_} de la barra lateral). Cuando hay varias sentencias, hay
+que ejecutar el bloque completo; si solo se selecciona una parte, el editor
+ejecuta únicamente esa parte.
+
+\subsection{Tablas, roles y políticas RLS}
+
+El script del laboratorio crea el tipo de rol, las tablas \texttt{profiles} y
+\texttt{clients} y las políticas de seguridad:
+
+\begin{lstlisting}[language=SQL, caption={Script de creación de la base de datos}]
+-- 1. Enumeración de roles
+CREATE TYPE public.user_role AS ENUM ('admin', 'user');
+
+-- 2. Tabla de perfiles (vinculada a autenticación)
+CREATE TABLE public.profiles (
+  id UUID REFERENCES auth.users(id) ON DELETE CASCADE PRIMARY KEY,
+  role public.user_role DEFAULT 'user' NOT NULL
+);
+
+-- 3. Tabla de clientes
+CREATE TABLE public.clients (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  nombre TEXT NOT NULL,
+  empresa TEXT NOT NULL,
+  email TEXT NOT NULL UNIQUE,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 4. Habilitar RLS
+ALTER TABLE public.clients ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+
+-- 5. Cada usuario solo puede leer su propio perfil
+CREATE POLICY "Leer perfil propio" ON public.profiles
+  FOR SELECT USING (auth.uid() = id);
+
+-- 6. Lectura de clientes: usuarios autenticados
+CREATE POLICY "Lectura para autenticados" ON public.clients
+  FOR SELECT TO authenticated USING (true);
+
+-- 7. Escritura (insert, update, delete): solo administradores
+CREATE POLICY "Escritura solo para admins" ON public.clients
+  FOR ALL TO authenticated
+  USING (EXISTS (SELECT 1 FROM public.profiles
+                 WHERE id = auth.uid() AND role = 'admin'))
+  WITH CHECK (EXISTS (SELECT 1 FROM public.profiles
+                      WHERE id = auth.uid() AND role = 'admin'));
+\end{lstlisting}
+
+El resultado es el esquema de la figura \ref{fig:esquema}: \texttt{profiles}
+está relacionada con \texttt{auth.users} por su \texttt{id}, y
+\texttt{clients} guarda los datos de los clientes.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{image3.png}
+    \caption{Base de datos de clients/profiles}
+    \label{fig:esquema}
+\end{figure}
+
+\subsection{Lectura pública de los clientes}
+
+Con el script original, solo los usuarios con sesión pueden leer los clientes
+(\texttt{TO authenticated}). Como la aplicación debe mostrar el listado a
+cualquier visitante, se sustituye la política de lectura por otra que también
+incluye el rol \texttt{anon} (usuario sin sesión):
+
+\begin{lstlisting}[language=SQL, caption={Política de lectura pública de clients}]
+DROP POLICY IF EXISTS "Lectura para autenticados" ON public.clients;
+CREATE POLICY "Lectura publica" ON public.clients
+  FOR SELECT TO anon, authenticated
+  USING (true);
+\end{lstlisting}
+
+La política \textit{``Escritura solo para admins''} no se modifica: crear,
+editar y borrar sigue reservado a los usuarios con rol \texttt{admin}.
+
+\subsection{Creación de usuarios y asignación de roles}
+
+Los usuarios se crean en \textit{Authentication > Users > Add user >
+Create new user}, marcando \textit{Auto Confirm User} para no tener que
+confirmar el correo. Se crean dos usuarios:
+
+\begin{itemize}
+  \item \texttt{juan@gmail.com}, que será el administrador.
+  \item \texttt{noeliac@gmail.com}, que podrá iniciar sesión pero no modificar
+        datos.
+\end{itemize}
+
+El script del laboratorio no crea los perfiles automáticamente, así que el rol
+se asigna a mano. Juan recibe el rol \texttt{admin} y Noelia se queda sin
+perfil, por lo que la política de escritura la bloquea:
+
+\begin{lstlisting}[language=SQL, caption={Asignación de roles}]
+-- Juan es administrador
+INSERT INTO public.profiles (id, role)
+SELECT id, 'admin' FROM auth.users WHERE email = 'juan@gmail.com'
+ON CONFLICT (id) DO UPDATE SET role = 'admin';
+
+-- Noelia sin perfil = sin permisos
+DELETE FROM public.profiles
+WHERE id = (SELECT id FROM auth.users WHERE email = 'noeliac@gmail.com');
+\end{lstlisting}
+
+Para comprobar el rol de cada usuario se cruza \texttt{auth.users} con
+\texttt{profiles}. Juan debe aparecer como \texttt{admin} y Noelia con
+\texttt{NULL}:
+
+\begin{lstlisting}[language=SQL, caption={Comprobación de los roles}]
+SELECT u.email, p.role
+FROM auth.users u
+LEFT JOIN public.profiles p ON p.id = u.id;
+\end{lstlisting}
+
+Un usuario con rol \texttt{user} tendría los mismos permisos que Noelia: puede
+leer, pero no escribir, porque la política de escritura exige el rol
+\texttt{admin}.
+
+\subsection{Datos de clientes}
+
+Los clientes se pueden crear desde la propia aplicación (sesión de Juan) o
+desde el SQL Editor. El \texttt{email} es único, así que no se puede repetir:
+
+\begin{lstlisting}[language=SQL, caption={Inserción de clientes de ejemplo}]
+INSERT INTO public.clients (nombre, empresa, email) VALUES
+  ('María López',   'Tech Solutions SL', 'maria.lopez@ejemplo.com'),
+  ('Carlos Ruiz',   'Innova Digital',    'carlos.ruiz@ejemplo.com'),
+  ('Laura Gómez',   'Grupo Norte SA',    'laura.gomez@ejemplo.com');
+\end{lstlisting}
+
+\subsection{Storage: bucket de imágenes}
+
+En \textit{Storage > Files} se crea el \textit{bucket} privado
+\texttt{galeria} y se suben las imágenes con \textit{Upload files}. Aunque el
+\textit{bucket} tenga archivos, la aplicación no los ve si no hay una
+política que lo permita: Supabase devuelve una lista vacía, no un error. Por
+eso se añade una política de lectura pública sobre \texttt{storage.objects},
+limitada a este \textit{bucket}:
+
+\begin{lstlisting}[language=SQL, caption={Política de lectura del bucket galeria}]
+CREATE POLICY "Ver galeria publica" ON storage.objects
+  FOR SELECT TO anon, authenticated
+  USING (bucket_id = 'galeria');
+\end{lstlisting}
+
+Solo se da permiso de lectura (\texttt{SELECT}): nadie puede subir ni borrar
+imágenes desde la aplicación.
+
+Las políticas activas de Storage se pueden consultar con:
+
+\begin{lstlisting}[language=SQL, caption={Consulta de las políticas de Storage}]
+SELECT policyname, cmd, roles, qual
+FROM pg_policies
+WHERE schemaname = 'storage' AND tablename = 'objects';
+\end{lstlisting}
+
+% ===========================================================================
+\section{Paso 4: Modelos de datos}
+% ===========================================================================
+
+Las interfaces de TypeScript reflejan la forma de los datos de Supabase, de
+modo que el compilador detecta si se usa un campo que no existe.
+
+\begin{lstlisting}[language=TypeScript, caption={src/app/models/client.model.ts}]
+export interface Client {
+  id?: string; // UUID
+  nombre: string;
+  empresa: string;
+  email: string;
+  created_at?: string;
+}
+
+export type UserRole = 'admin' | 'user';
+\end{lstlisting}
+
+\begin{lstlisting}[language=TypeScript, caption={src/app/models/storage-image.model.ts}]
+export interface StorageImage {
+  name: string;
+  url: string;   // URL firmada (el bucket es privado)
+  size?: number; // bytes
+  createdAt?: string;
+}
+\end{lstlisting}
+
+% ===========================================================================
+\section{Paso 5: Servicio de conexión (supabase.service.ts)}
+% ===========================================================================
+
+El servicio \texttt{SupabaseService} (\texttt{providedIn: 'root'}, una única
+instancia para toda la aplicación) crea el cliente de Supabase y centraliza la
+autenticación, los roles, el CRUD y el acceso a Storage.
+
+\subsection{Conexión, sesión y roles}
+
+El usuario y su rol se guardan en \textit{signals}. Cuando cambian, la
+interfaz se actualiza sola. El servicio recupera la sesión guardada al
+arrancar y escucha los cambios de sesión con \texttt{onAuthStateChange}.
+
+\begin{lstlisting}[language=TypeScript, caption={Conexión y estado de la sesión}]
+export class SupabaseService {
+  private readonly supabase: SupabaseClient;
+
+  // Estado global reactivo (Signals)
+  readonly currentUser = signal<User | null>(null);
+  readonly userRole = signal<UserRole | null>(null);
+  readonly isAuthenticated = computed(() => this.currentUser() !== null);
+  readonly isAdmin = computed(() => this.userRole() === 'admin');
+
+  // Se resuelve cuando la sesión guardada se ha recuperado
+  readonly ready: Promise<void>;
+
+  constructor() {
+    this.supabase = createClient(environment.supabaseUrl, environment.supabaseKey);
+
+    this.ready = this.supabase.auth
+      .getSession()
+      .then(({ data }) => this.applySession(data.session));
+
+    // Mantiene el estado sincronizado (login, logout, refresco de token)
+    this.supabase.auth.onAuthStateChange((_event, session) => {
+      setTimeout(() => this.applySession(session), 0);
+    });
+  }
+
+  private async loadRole(userId: string): Promise<void> {
+    const { data, error } = await this.supabase
+      .from('profiles').select('role').eq('id', userId).maybeSingle();
+    if (error) console.error('Error cargando el rol:', error.message);
+    // Sin perfil en la tabla profiles = sin permisos (null)
+    this.userRole.set((data?.role as UserRole) ?? null);
+  }
+
+  async login(email: string, password: string): Promise<void> {
+    const { data, error } = await this.supabase.auth
+      .signInWithPassword({ email, password });
+    if (error) throw error;
+    await this.applySession(data.session);
+  }
+}
+\end{lstlisting}
+
+\subsection{CRUD de clientes}
+
+\begin{lstlisting}[language=TypeScript, caption={Operaciones CRUD sobre la tabla clients}]
+async getClients(): Promise<Client[]> {
+  const { data, error } = await this.supabase
+    .from('clients').select('*')
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return data ?? [];
+}
+
+async addClient(client: Client): Promise<void> {
+  const { error } = await this.supabase.from('clients').insert({
+    nombre: client.nombre, empresa: client.empresa, email: client.email,
+  });
+  if (error) throw error;
+}
+
+async updateClient(id: string, client: Partial<Client>): Promise<void> {
+  const { data, error } = await this.supabase.from('clients')
+    .update({ nombre: client.nombre, empresa: client.empresa, email: client.email })
+    .eq('id', id)
+    .select();
+  if (error) throw error;
+  // Si RLS bloquea la operación, Supabase no da error: no modifica ninguna fila
+  if (!data?.length) throw new Error('No tienes permisos para editar este cliente');
+}
+
+async deleteClient(id: string): Promise<void> {
+  const { data, error } = await this.supabase
+    .from('clients').delete().eq('id', id).select();
+  if (error) throw error;
+  if (!data?.length) throw new Error('No tienes permisos para borrar este cliente');
+}
+\end{lstlisting}
+
+\subsection{Imágenes del bucket}
+
+Como el \textit{bucket} es privado, no sirven las URLs públicas. El servicio
+lista los archivos, descarta lo que no sea una imagen y genera URLs firmadas
+que caducan a la hora:
+
+\begin{lstlisting}[language=TypeScript, caption={Lectura de las imágenes de Storage}]
+async getGalleryImages(): Promise<StorageImage[]> {
+  const bucket = this.supabase.storage.from('galeria');
+
+  // 1. Listar los archivos de la raíz del bucket
+  const { data: files, error } = await bucket.list('', {
+    limit: 100,
+    sortBy: { column: 'name', order: 'asc' },
+  });
+  if (error) throw error;
+
+  // Solo imágenes (se descartan carpetas y marcadores)
+  const images = (files ?? []).filter((f) => f.id && IMAGE_EXTENSIONS.test(f.name));
+  if (!images.length) return [];
+
+  // 2. Generar URLs firmadas temporales (1 hora)
+  const { data: signed, error: signError } = await bucket.createSignedUrls(
+    images.map((f) => f.name),
+    60 * 60,
+  );
+  if (signError) throw signError;
+
+  return images.map((file, i) => ({
+    name: file.name,
+    url: signed?.[i]?.signedUrl ?? '',
+    size: file.metadata?.['size'],
+    createdAt: file.created_at ?? undefined,
+  }));
+}
+\end{lstlisting}
+
+% ===========================================================================
+\section{Paso 6: Rutas y navegación}
+% ===========================================================================
+
+La aplicación es de acceso libre: no hay ninguna ruta protegida, porque leer
+los datos no requiere sesión. El inicio de sesión se pide solo en el momento
+en que el usuario intenta modificar algo (paso 7).
+
+\begin{lstlisting}[language=TypeScript, caption={src/app/app.routes.ts}]
+// Acceso libre: cualquiera puede ver clientes y galería.
+// El login se pide solo al intentar modificar datos.
+export const routes: Routes = [
+  {
+    path: '',
+    loadChildren: () => import('./tabs/tabs.routes').then((m) => m.routes),
+  },
+];
+\end{lstlisting}
+
+La barra de pestañas tiene dos páginas: \textbf{Clientes}
+(\texttt{/tabs/tab1}) y \textbf{Galería} (\texttt{/tabs/galeria}).
+
+\begin{lstlisting}[language=HTML, caption={src/app/tabs/tabs.page.html}]
+<ion-tabs>
+  <ion-tab-bar slot="bottom">
+    <ion-tab-button tab="tab1" href="/tabs/tab1">
+      <ion-icon aria-hidden="true" name="people"></ion-icon>
+      <ion-label>Clientes</ion-label>
+    </ion-tab-button>
+    <ion-tab-button tab="galeria" href="/tabs/galeria">
+      <ion-icon aria-hidden="true" name="images"></ion-icon>
+      <ion-label>Galería</ion-label>
+    </ion-tab-button>
+  </ion-tab-bar>
+</ion-tabs>
+\end{lstlisting}
+
+% ===========================================================================
+\section{Paso 7: Inicio de sesión al modificar datos}
+% ===========================================================================
+
+Cualquier visitante puede rellenar el formulario de cliente, pero al pulsar
+\textit{Guardar} (o editar o borrar un cliente) la aplicación comprueba los
+permisos con el método \texttt{runAsAdmin}:
+
+\begin{itemize}
+  \item \textbf{Sin sesión}: abre una ventana de \textit{login}
+        (\texttt{ion-modal}) y guarda la acción pendiente. Los datos escritos
+        en el formulario no se pierden.
+  \item \textbf{Con sesión de administrador}: ejecuta la acción. Si se acaba
+        de iniciar sesión, se retoma la acción pendiente automáticamente.
+  \item \textbf{Con sesión sin rol de administrador}: avisa de que no tiene
+        permisos y no envía nada.
+\end{itemize}
+
+\begin{lstlisting}[language=TypeScript, caption={Control de permisos en src/app/tab1/tab1.page.ts}]
+// Acción que el usuario quería hacer antes de que se le pidiera el login
+private pendingAction: (() => Promise<void>) | null = null;
+
+private async runAsAdmin(action: () => Promise<void>) {
+  if (!this.isAuthenticated()) {
+    this.pendingAction = action;
+    this.loginError.set('');
+    this.loginOpen.set(true);
+    return;
+  }
+  if (!this.isAdmin()) {
+    this.showToast('No tienes permisos para modificar clientes');
+    return;
+  }
+  await action();
+}
+
+async login() {
+  if (this.loginForm.invalid) {
+    this.loginForm.markAllAsTouched();
+    return;
+  }
+  try {
+    const { email, password } = this.loginForm.getRawValue();
+    await this.supabase.login(email, password);
+    this.loginOpen.set(false);
+
+    // Retomar lo que el usuario intentaba hacer
+    const action = this.pendingAction;
+    this.pendingAction = null;
+    if (action) await this.runAsAdmin(action);
+  } catch (e: any) {
+    this.loginError.set(e?.message ?? 'No se ha podido iniciar sesión');
+  }
+}
+\end{lstlisting}
+
+El formulario de \textit{login} también es reactivo: el email debe tener un
+formato válido y la contraseña al menos 6 caracteres. Si Supabase rechaza las
+credenciales, el error se muestra dentro de la ventana.
+
+Esta comprobación en la interfaz es solo una ayuda para el usuario. Aunque
+alguien la saltara llamando directamente a la API, la política RLS
+\textit{``Escritura solo para admins''} rechazaría la operación.
+
+% ===========================================================================
+\section{Paso 8: Página de gestión de clientes}
+% ===========================================================================
+
+\subsection{Lógica de la página}
+
+La página usa \texttt{FormBuilder} para el formulario de clientes y
+\textit{signals} para el estado de la vista. El mismo formulario sirve para
+crear y para editar: si hay un cliente en edición
+(\texttt{editingId}), se actualiza; si no, se inserta uno nuevo.
+
+\begin{lstlisting}[language=TypeScript, caption={Fragmento de src/app/tab1/tab1.page.ts}]
+readonly clients = signal<Client[]>([]);
+readonly editingId = signal<string | null>(null);
+
+readonly isAdmin = this.supabase.isAdmin;
+readonly isAuthenticated = this.supabase.isAuthenticated;
+
+readonly clientForm = this.fb.nonNullable.group({
+  nombre: ['', [Validators.required, Validators.minLength(3)]],
+  empresa: ['', Validators.required],
+  email: ['', [Validators.required, Validators.email]],
+});
+
+async saveClient() {
+  if (this.clientForm.invalid) {
+    this.clientForm.markAllAsTouched();
+    return;
+  }
+  // Solo se guarda si el usuario es admin (si no hay sesión, pide login)
+  await this.runAsAdmin(async () => {
+    const value = this.clientForm.getRawValue();
+    const id = this.editingId();
+    try {
+      if (id !== null) {
+        await this.supabase.updateClient(id, value);
+        this.showToast('Cliente actualizado');
+      } else {
+        await this.supabase.addClient(value);
+        this.showToast('Cliente insertado');
+      }
+      this.resetForm();
+      await this.loadClients();
+    } catch (e: any) {
+      this.showToast('Error al guardar: ' + e.message);
+    }
+  });
+}
+\end{lstlisting}
+
+\subsection{Vista con renderizado condicional}
+
+La vista usa el \textit{control flow} de Angular. La cabecera muestra el botón
+de iniciar sesión o el de cerrarla según haya sesión, y con sesión se muestra
+el email y el rol. El formulario y la lista son visibles para todos; las
+opciones de editar y borrar aparecen al deslizar cada cliente
+(\texttt{ion-item-sliding}) y piden el \textit{login} si hace falta.
+
+\begin{lstlisting}[language=HTML, caption={Fragmento de src/app/tab1/tab1.page.html}]
+<ion-buttons slot="end">
+  @if (isAuthenticated()) {
+    <ion-button (click)="logout()" aria-label="Cerrar sesión">...</ion-button>
+  } @else {
+    <ion-button (click)="openLogin()" aria-label="Iniciar sesión">...</ion-button>
+  }
+</ion-buttons>
+...
+@if (isAuthenticated()) {
+  <p>Sesión: {{ user()?.email }} · Rol: <strong>{{ userRole() ?? 'sin permisos' }}</strong></p>
+}
+
+<ion-grid>
+  <ion-row>
+    <!-- FORMULARIO: visible para todos, guardar exige ser admin -->
+    <ion-col size="12" size-lg="5">
+      @if (!isAdmin()) {
+        <ion-note>Para guardar necesitas iniciar sesión como administrador.</ion-note>
+      }
+      <form [formGroup]="clientForm" (ngSubmit)="saveClient()">
+        <ion-item>
+          <ion-input label="Nombre" labelPlacement="stacked"
+            formControlName="nombre" errorText="Mínimo 3 caracteres">
+          </ion-input>
+        </ion-item>
+        <!-- ... empresa y email ... -->
+      </form>
+    </ion-col>
+
+    <!-- LISTADO: lectura pública -->
+    <ion-col size="12" size-lg="7">
+      <ion-list>
+        @for (client of clients(); track client.id) {
+          <ion-item-sliding #sliding>
+            <ion-item>
+              <ion-label>
+                <h2>{{ client.nombre }}</h2>
+                <p>{{ client.empresa }} | {{ client.email }}</p>
+              </ion-label>
+            </ion-item>
+            <ion-item-options side="end">
+              <ion-item-option (click)="editClient(client, sliding)">...</ion-item-option>
+              <ion-item-option color="danger" (click)="deleteClient(client, sliding)">...</ion-item-option>
+            </ion-item-options>
+          </ion-item-sliding>
+        } @empty {
+          <ion-item><ion-label>No hay clientes registrados.</ion-label></ion-item>
+        }
+      </ion-list>
+    </ion-col>
+  </ion-row>
+</ion-grid>
+
+<!-- Ventana de login: se abre al intentar modificar sin sesión -->
+<ion-modal [isOpen]="loginOpen()" (didDismiss)="closeLogin()">
+  <ng-template>
+    <form [formGroup]="loginForm" (ngSubmit)="login()">...</form>
+  </ng-template>
+</ion-modal>
+\end{lstlisting}
+
+La aplicación usa siempre el tema claro: se ha desactivado la paleta oscura
+automática de Ionic (\texttt{dark.system.css}) en \texttt{global.scss}.
+
+El \texttt{ion-grid} coloca el formulario y el listado uno al lado del otro en
+pantallas grandes (\texttt{size-lg}) y uno debajo del otro en el móvil
+(\texttt{size="12"}).
+
+% ===========================================================================
+\section{Paso 9: Página de galería (Storage)}
+% ===========================================================================
+
+La página \texttt{src/app/galeria} muestra cada imagen del \textit{bucket}
+\texttt{galeria} en una \texttt{ion-card} con la foto, el nombre del archivo,
+la fecha de subida y el tamaño. Las \textit{cards} se reparten con
+\texttt{ion-grid}: una columna en el móvil, dos en tablet y cuatro en
+escritorio. Mientras carga se muestra un \textit{spinner} y se puede recargar
+deslizando hacia abajo (\texttt{ion-refresher}).
+
+\begin{lstlisting}[language=HTML, caption={Fragmento de src/app/galeria/galeria.page.html}]
+<ion-grid>
+  <ion-row>
+    @for (img of images(); track img.name) {
+      <!-- 1 columna en móvil, 2 en tablet, 4 en escritorio -->
+      <ion-col size="12" size-sm="6" size-lg="3">
+        <ion-card>
+          <img [src]="img.url" [alt]="img.name" loading="lazy" />
+          <ion-card-header>
+            <ion-card-title>{{ img.name }}</ion-card-title>
+            <ion-card-subtitle>{{ img.createdAt | date: 'dd/MM/yyyy HH:mm' }}</ion-card-subtitle>
+          </ion-card-header>
+          <ion-card-content>{{ img.size / 1024 | number: '1.0-1' }} KB</ion-card-content>
+        </ion-card>
+      </ion-col>
+    } @empty {
+      <ion-col size="12">No hay imágenes en el bucket "galeria".</ion-col>
+    }
+  </ion-row>
+</ion-grid>
+\end{lstlisting}
+
+% ===========================================================================
+\section{Navegación}
+% ===========================================================================
+
+La aplicación se arranca en modo desarrollo con:
+
+\begin{lstlisting}[language=bash, caption={Arranque del servidor de desarrollo}]
+ionic serve      # http://localhost:8100
+\end{lstlisting}
+
+Al entrar con \texttt{juan@gmail.com}, la cabecera muestra el email y el rol
+\texttt{admin}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{image4.png}
+    \caption{Usuario Juan (admin)}
+    \label{fig:juan}
+\end{figure}
+
+Como administrador, Juan ve el formulario de nuevo cliente y el listado
+completo, y puede editar o borrar cada cliente deslizándolo.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{image5.png}
+    \caption{Entrada desde admin que se puede ver la base de datos}
+    \label{fig:admin}
+\end{figure}
+
+Los mismos datos aparecen en el \textit{Table Editor} de Supabase. Esto
+demuestra que la aplicación lee y escribe en la base de datos real: un cliente
+creado desde la aplicación aparece en Supabase, y un cambio hecho en Supabase
+aparece en la aplicación al recargarla.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{image6.png}
+    \caption{Datos de la base de datos desde supabase}
+    \label{fig:supabase-datos}
+\end{figure}
+
+Al entrar con \texttt{noeliac@gmail.com}, que no tiene perfil, la aplicación
+muestra el rol \textit{sin permisos} y un aviso de acceso denegado. El bloqueo
+no depende solo de la interfaz: aunque se consultara la API directamente, la
+política RLS devolvería una lista vacía.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{image7.png}
+    \caption{Usuario que no puede ver la base de datos}
+    \label{fig:sin-permisos}
+\end{figure}
+
+En la pestaña \textbf{Galería} se muestran como \textit{cards} las imágenes
+subidas al \textit{bucket} \texttt{galeria} de Supabase Storage.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{image8.png}
+    \caption{Visualización de las imágenes en la app}
+    \label{fig:galeria}
+\end{figure}
+
+% ===========================================================================
+\section{Mejoras respecto al enunciado}
+% ===========================================================================
+
+Durante el desarrollo se corrigieron varios problemas del código propuesto en
+el enunciado del laboratorio:
+
+\begin{enumerate}
+  \item \textbf{Conflicto de nombres.} El método CRUD se llamaba
+        \texttt{createClient}, igual que la función de Supabase que crea la
+        conexión. Se ha renombrado a \texttt{addClient}.
+  \item \textbf{Login real.} El enunciado dejaba el \textit{login} comentado y
+        suponía que había sesión. Sin sesión, RLS devuelve una lista vacía y el
+        rol nunca se carga. Se ha añadido una pantalla de inicio de sesión.
+  \item \textbf{Sincronización de la sesión.} Se ha añadido
+        \texttt{onAuthStateChange} para que el estado se actualice al cerrar
+        sesión o al refrescarse el \textit{token}.
+  \item \textbf{Condición de carrera en los guards.} Los \textit{guards}
+        esperan a que la sesión esté cargada antes de decidir.
+  \item \textbf{Nombre engañoso.} En el enunciado \texttt{isAdmin} guardaba el
+        rol (un texto), no un booleano. Ahora es un \textit{signal} calculado
+        que devuelve \texttt{true} o \texttt{false}.
+  \item \textbf{Operaciones bloqueadas sin aviso.} Cuando RLS bloquea un
+        \texttt{update} o un \texttt{delete}, Supabase no devuelve error. Se
+        añade \texttt{.select()} para detectarlo y avisar al usuario.
+  \item \textbf{Componentes de Ionic actualizados.} Se ha sustituido
+        \texttt{ion-label position="stacked"}, ya obsoleto, por los atributos
+        \texttt{label} y \texttt{labelPlacement} de \texttt{ion-input}.
+  \item \textbf{Usuarios sin permisos.} Se ha añadido un tercer nivel de
+        acceso: los usuarios sin perfil no pueden ver los clientes.
+\end{enumerate}
+
+% ===========================================================================
+\section{Repositorio y despliegue}
+% ===========================================================================
+
+\subsection{GitHub}
+
+El código está publicado en \url{https://github.com/NoeCB/supabase}. Las
+carpetas \texttt{node\_modules} y \texttt{www} (resultado de la compilación)
+quedan fuera del repositorio gracias al archivo \texttt{.gitignore}.
+
+\begin{lstlisting}[language=bash, caption={Subida del proyecto a GitHub}]
+git add .
+git commit -m "CRUD de clientes con roles (Ionic + Angular + Supabase)"
+git branch -M main
+git remote add origin https://github.com/NoeCB/supabase.git
+git push -u origin main
+\end{lstlisting}
+
+\subsection{Vercel}
+
+La aplicación se despliega en Vercel a partir del repositorio de GitHub. El
+archivo \texttt{vercel.json} indica cómo compilarla y redirige todas las rutas
+a \texttt{index.html}, para que recargar páginas como \texttt{/login} o
+\texttt{/tabs/galeria} no devuelva un error 404:
+
+\begin{lstlisting}[caption={vercel.json}]
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": "www",
+  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+}
+\end{lstlisting}
+
+Pasos del despliegue:
+
+\begin{enumerate}
+  \item Entrar en \url{https://vercel.com} con la cuenta de GitHub.
+  \item Pulsar \textit{Add New > Project} e importar el repositorio
+        \texttt{NoeCB/supabase}.
+  \item Dejar la configuración que lee de \texttt{vercel.json} y pulsar
+        \textit{Deploy}.
+  \item Al terminar, Vercel da una URL pública. Cada \texttt{git push} a la
+        rama \texttt{main} vuelve a desplegar la aplicación.
+\end{enumerate}
+
+% Cambia esta URL por la que te dé Vercel
+La aplicación desplegada está disponible en
+\url{https://TU-PROYECTO.vercel.app}.
+
+% ===========================================================================
+\section{Conclusión}
+% ===========================================================================
+
+Se ha desarrollado una aplicación CRUD con control de acceso basado en roles y
+una galería conectada a Supabase Storage. La conexión con Supabase se apoya en:
+
+\begin{enumerate}
+  \item La librería \texttt{@supabase/supabase-js} instalada en el proyecto.
+  \item Las credenciales (URL y clave pública) guardadas en los
+        \textit{environments}.
+  \item Un servicio (\texttt{SupabaseService}) que crea el cliente y centraliza
+        la autenticación, el CRUD y el acceso a Storage.
+\end{enumerate}
+
+La seguridad se aplica en dos niveles. En el \textbf{servidor}, las políticas
+RLS impiden que un usuario sin rol de administrador modifique datos y que un
+usuario sin perfil los lea, aunque intente hacerlo directamente contra la API.
+En el \textbf{cliente}, la interfaz se adapta al rol con \texttt{@if},
+ocultando las opciones que el usuario no puede usar.
+
+% ===========================================================================
+\section*{Referencias}
+\addcontentsline{toc}{section}{Referencias}
+% ===========================================================================
+
+\begin{hangparas}{0.5in}{1}
+Angular. (2026). \textit{Reactive forms}. \url{https://angular.dev/guide/forms/reactive-forms}
+
+Angular. (2026). \textit{Signals}. \url{https://angular.dev/guide/signals}
+
+Ionic. (2026). \textit{Ionic Framework documentation}. \url{https://ionicframework.com/docs}
+
+Supabase. (2026). \textit{JavaScript client library}. \url{https://supabase.com/docs/reference/javascript}
+
+Supabase. (2026). \textit{Row Level Security}. \url{https://supabase.com/docs/guides/database/postgres/row-level-security}
+
+Supabase. (2026). \textit{Storage access control}. \url{https://supabase.com/docs/guides/storage/security/access-control}
+
+Vercel. (2026). \textit{Deploying to Vercel}. \url{https://vercel.com/docs/deployments}
+\end{hangparas}
+
+\end{document}

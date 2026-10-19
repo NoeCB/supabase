@@ -2,6 +2,11 @@ import { Injectable, computed, signal } from '@angular/core';
 import { createClient, Session, SupabaseClient, User } from '@supabase/supabase-js';
 import { environment } from '../environments/environment';
 import { Client, UserRole } from './models/client.model';
+import { StorageImage } from './models/storage-image.model';
+
+const GALLERY_BUCKET = 'galeria';
+const IMAGE_EXTENSIONS = /\.(jpe?g|png|gif|webp|avif|svg)$/i;
+const SIGNED_URL_SECONDS = 60 * 60; // 1 hora
 
 @Injectable({
   providedIn: 'root',
@@ -15,8 +20,7 @@ export class SupabaseService {
   readonly isAuthenticated = computed(() => this.currentUser() !== null);
   readonly isAdmin = computed(() => this.userRole() === 'admin');
 
-  // Promesa que se resuelve cuando la sesión inicial está cargada.
-  // El guard la espera para evitar la race condition del PDF original.
+  // Promesa que se resuelve cuando la sesión guardada se ha recuperado
   readonly ready: Promise<void>;
 
   constructor() {
@@ -55,8 +59,8 @@ export class SupabaseService {
     if (error) {
       console.error('Error cargando el rol:', error.message);
     }
-    // Sin perfil o con error, se asume el rol con menos privilegios
-    this.userRole.set((data?.role as UserRole) ?? 'user');
+    // Sin perfil en la tabla profiles = sin permisos (null)
+    this.userRole.set((data?.role as UserRole) ?? null);
   }
 
   async login(email: string, password: string): Promise<void> {
@@ -108,5 +112,38 @@ export class SupabaseService {
     const { data, error } = await this.supabase.from('clients').delete().eq('id', id).select();
     if (error) throw error;
     if (!data?.length) throw new Error('No tienes permisos para borrar este cliente');
+  }
+
+  // --- STORAGE (bucket privado "galeria") ---
+
+  async getGalleryImages(): Promise<StorageImage[]> {
+    const bucket = this.supabase.storage.from(GALLERY_BUCKET);
+
+    // 1. Listar los archivos de la raíz del bucket
+    const { data: files, error } = await bucket.list('', {
+      limit: 100,
+      sortBy: { column: 'name', order: 'asc' },
+    });
+    if (error) throw error;
+
+    // Solo imágenes (se descartan carpetas y el marcador .emptyFolderPlaceholder)
+    const images = (files ?? []).filter((f) => f.id && IMAGE_EXTENSIONS.test(f.name));
+    if (!images.length) return [];
+
+    // 2. Generar URLs firmadas temporales (el bucket no es público)
+    const { data: signed, error: signError } = await bucket.createSignedUrls(
+      images.map((f) => f.name),
+      SIGNED_URL_SECONDS,
+    );
+    if (signError) throw signError;
+
+    return images
+      .map((file, i) => ({
+        name: file.name,
+        url: signed?.[i]?.signedUrl ?? '',
+        size: file.metadata?.['size'],
+        createdAt: file.created_at ?? undefined,
+      }))
+      .filter((img) => img.url);
   }
 }

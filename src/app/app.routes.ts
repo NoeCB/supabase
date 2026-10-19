@@ -1,15 +1,10 @@
 import { Routes } from '@angular/router';
-import { authGuard, guestGuard } from './auth.guard';
 
+// Acceso libre: cualquiera puede ver clientes y galería.
+// El login se pide solo al intentar modificar datos (ver tab1.page.ts).
 export const routes: Routes = [
   {
-    path: 'login',
-    canActivate: [guestGuard],
-    loadComponent: () => import('./login/login.page').then((m) => m.LoginPage),
-  },
-  {
     path: '',
-    canActivate: [authGuard],
     loadChildren: () => import('./tabs/tabs.routes').then((m) => m.routes),
   },
 ];

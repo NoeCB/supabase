@@ -1,0 +1,22 @@
+ion-card {
+  height: 100%;
+  margin: 0;
+
+  img {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    display: block;
+  }
+}
+
+ion-card-title {
+  font-size: 1rem;
+  word-break: break-all;
+}
+
+.estado {
+  display: flex;
+  justify-content: center;
+  padding: 2rem;
+}

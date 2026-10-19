@@ -715,23 +715,20 @@ async saveClient() {
 
 \subsection{Vista con renderizado condicional}
 
-La vista usa el \textit{control flow} de Angular. La cabecera muestra el botón
-de iniciar sesión o el de cerrarla según haya sesión, y con sesión se muestra
-el email y el rol. El formulario y la lista son visibles para todos; las
-opciones de editar y borrar aparecen al deslizar cada cliente
-(\texttt{ion-item-sliding}) y piden el \textit{login} si hace falta.
+La vista usa el \textit{control flow} de Angular. No hay ningún botón de
+iniciar sesión: el \textit{login} aparece solo al pulsar \textit{Guardar}, o
+al editar o borrar un cliente. Una vez iniciada la sesión, se muestra el
+email, el rol y un botón para cerrarla. El formulario y la lista son visibles
+para todos; las opciones de editar y borrar aparecen al deslizar cada cliente
+(\texttt{ion-item-sliding}).
 
 \begin{lstlisting}[language=HTML, caption={Fragmento de src/app/tab1/tab1.page.html}]
-<ion-buttons slot="end">
-  @if (isAuthenticated()) {
-    <ion-button (click)="logout()" aria-label="Cerrar sesión">...</ion-button>
-  } @else {
-    <ion-button (click)="openLogin()" aria-label="Iniciar sesión">...</ion-button>
-  }
-</ion-buttons>
-...
+<!-- Solo aparece tras iniciar sesión (al pulsar Guardar) -->
 @if (isAuthenticated()) {
-  <p>Sesión: {{ user()?.email }} · Rol: <strong>{{ userRole() ?? 'sin permisos' }}</strong></p>
+  <p>
+    Sesión: {{ user()?.email }} · Rol: <strong>{{ userRole() ?? 'sin permisos' }}</strong>
+    <ion-button size="small" fill="clear" (click)="logout()">Cerrar sesión</ion-button>
+  </p>
 }
 
 <ion-grid>
@@ -833,8 +830,11 @@ La aplicación se arranca en modo desarrollo con:
 ionic serve      # http://localhost:8100
 \end{lstlisting}
 
-Al entrar con \texttt{juan@gmail.com}, la cabecera muestra el email y el rol
-\texttt{admin}.
+Al abrir la aplicación, cualquier visitante ve el listado de clientes y el
+formulario, sin iniciar sesión. Al rellenar el formulario y pulsar
+\textit{Guardar}, se abre la ventana de \textit{login}. Si entra
+\texttt{juan@gmail.com}, el cliente se guarda en ese momento y la página
+muestra su email y el rol \texttt{admin}.
 
 \begin{figure}[H]
     \centering
@@ -843,8 +843,8 @@ Al entrar con \texttt{juan@gmail.com}, la cabecera muestra el email y el rol
     \label{fig:juan}
 \end{figure}
 
-Como administrador, Juan ve el formulario de nuevo cliente y el listado
-completo, y puede editar o borrar cada cliente deslizándolo.
+Como administrador, Juan puede crear clientes y editar o borrar cualquiera de
+ellos deslizándolo en la lista.
 
 \begin{figure}[H]
     \centering
@@ -865,15 +865,18 @@ aparece en la aplicación al recargarla.
     \label{fig:supabase-datos}
 \end{figure}
 
-Al entrar con \texttt{noeliac@gmail.com}, que no tiene perfil, la aplicación
-muestra el rol \textit{sin permisos} y un aviso de acceso denegado. El bloqueo
-no depende solo de la interfaz: aunque se consultara la API directamente, la
-política RLS devolvería una lista vacía.
+Si al pulsar \textit{Guardar} se inicia sesión con
+\texttt{noeliac@gmail.com}, que no tiene perfil, la aplicación muestra el rol
+\textit{sin permisos} y el aviso \textit{``No tienes permisos para modificar
+clientes''}, y el cliente no se guarda. El bloqueo no depende solo de la
+interfaz: aunque se llamara directamente a la API, la política RLS
+\textit{``Escritura solo para admins''} rechazaría la operación.
 
+% Captura: sesión de Noelia tras pulsar Guardar, con el aviso de sin permisos
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.75\linewidth]{image7.png}
-    \caption{Usuario que no puede ver la base de datos}
+    \caption{Usuario sin permisos que no puede añadir clientes}
     \label{fig:sin-permisos}
 \end{figure}
 
@@ -898,14 +901,15 @@ el enunciado del laboratorio:
   \item \textbf{Conflicto de nombres.} El método CRUD se llamaba
         \texttt{createClient}, igual que la función de Supabase que crea la
         conexión. Se ha renombrado a \texttt{addClient}.
-  \item \textbf{Login real.} El enunciado dejaba el \textit{login} comentado y
-        suponía que había sesión. Sin sesión, RLS devuelve una lista vacía y el
-        rol nunca se carga. Se ha añadido una pantalla de inicio de sesión.
+  \item \textbf{Login real y en el momento adecuado.} El enunciado dejaba el
+        \textit{login} comentado y suponía que había sesión, así que el rol
+        nunca se cargaba. Ahora la lectura es pública y el \textit{login} se
+        pide solo al intentar modificar datos, sin perder lo escrito en el
+        formulario.
   \item \textbf{Sincronización de la sesión.} Se ha añadido
         \texttt{onAuthStateChange} para que el estado se actualice al cerrar
-        sesión o al refrescarse el \textit{token}.
-  \item \textbf{Condición de carrera en los guards.} Los \textit{guards}
-        esperan a que la sesión esté cargada antes de decidir.
+        sesión o al refrescarse el \textit{token}. La página espera a que se
+        recupere la sesión guardada (\texttt{ready}) antes de cargar los datos.
   \item \textbf{Nombre engañoso.} En el enunciado \texttt{isAdmin} guardaba el
         rol (un texto), no un booleano. Ahora es un \textit{signal} calculado
         que devuelve \texttt{true} o \texttt{false}.
@@ -915,8 +919,9 @@ el enunciado del laboratorio:
   \item \textbf{Componentes de Ionic actualizados.} Se ha sustituido
         \texttt{ion-label position="stacked"}, ya obsoleto, por los atributos
         \texttt{label} y \texttt{labelPlacement} de \texttt{ion-input}.
-  \item \textbf{Usuarios sin permisos.} Se ha añadido un tercer nivel de
-        acceso: los usuarios sin perfil no pueden ver los clientes.
+  \item \textbf{Galería de Storage.} Se ha añadido una página que muestra en
+        \textit{cards} las imágenes de un \textit{bucket} privado mediante URLs
+        firmadas.
 \end{enumerate}
 
 % ===========================================================================
@@ -941,7 +946,7 @@ git push -u origin main
 
 La aplicación se despliega en Vercel a partir del repositorio de GitHub. El
 archivo \texttt{vercel.json} indica cómo compilarla y redirige todas las rutas
-a \texttt{index.html}, para que recargar páginas como \texttt{/login} o
+a \texttt{index.html}, para que recargar páginas como \texttt{/tabs/tab1} o
 \texttt{/tabs/galeria} no devuelva un error 404:
 
 \begin{lstlisting}[caption={vercel.json}]
